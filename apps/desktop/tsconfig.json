@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@roki/core": ["../../packages/core/src"],
+      "@roki/shared": ["../../packages/shared/src"],
+      "@roki/ai": ["../../packages/ai/src"],
+      "@roki/capture": ["../../packages/capture/src"],
+      "@roki/config": ["../../packages/config/src"],
+      "@roki/prompts": ["../../packages/prompts/src"]
+    }
+  },
+  "include": ["src"]
+}
