@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicklason2/tauri/HEAD/tooling/cli/schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for Roki",
+  "windows": ["*"],
+  "permissions": [
+    "core:default",
+    "global-shortcut:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+    "store:default",
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file"
+  ]
+}
