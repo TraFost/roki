@@ -1,38 +1,40 @@
 # Roki
 
-> **Cross-platform AI desktop assistant.** Windows-first, built with Tauri v2 + React + Bun.
+**Cross-platform AI desktop assistant.** Windows-first, built with Tauri v2 + React + TypeScript.
 
-Roki lives in your system tray. Hit a global shortcut, it captures your screen, sends it to an AI model alongside your voice or text query, and streams the response back — right next to your cursor. Think of it as having a copilot that can *see* what you're doing.
+Roki lives in your system tray. Hit a global shortcut, it captures your screen, sends it to an AI model alongside your query, and streams the response back in a floating dark-theme panel. Think of it as having a copilot that can *see* what you're doing.
 
-![Roki demo](https://github.com/user-attachments/assets/placeholder-demo.gif)
+![Roki demo](media/rocky.gif)
 
 ---
 
-## 🧠 What it does
+## Credits
 
-1. **Press a shortcut** (`Ctrl+Shift+Space`) or click the tray icon
+This project is a cross-platform port and evolution of [Clicky](https://github.com/farzaa/clicky) by [Farza](https://x.com/farzatv). Clicky was the original macOS AI companion that inspired this entire approach -- menu bar app, streaming vision AI, cursor overlay, the whole package. Roki rebuilds those ideas from the ground up for Windows and beyond.
+
+The project is named after **Rocky**, the alien companion from Andy Weir's *Project Hail Mary*. Like Rocky, Roki is meant to be a loyal sidekick -- always there, always watching, always ready to help.
+
+> All credit for the original Clicky concept and design goes to Farza. Go check out his work at [heyclicky.com](https://www.heyclicky.com/).
+
+Original Clicky is MIT-licensed at [github.com/farzaa/clicky](https://github.com/farzaa/clicky).
+
+---
+
+## What it does
+
+1. **Press a shortcut** (Ctrl+Shift+Space) or click the tray icon
 2. **Roki captures** your screen (all monitors, JPEG-compressed, multi-display aware)
 3. **AI processes** the screenshot + your query via your choice of provider
 4. **Response streams** back in a floating dark-theme panel
 
-Optional (coming soon):
-- **Voice input** — push-to-talk, real-time transcription
-- **Element pointing** — the AI can direct a blue cursor overlay to UI elements
-- **Text-to-speech** — responses spoken aloud
+Coming soon:
+- Voice input -- push-to-talk, real-time transcription
+- Element pointing -- the AI can direct a blue cursor overlay to UI elements
+- Text-to-speech -- responses spoken aloud
 
 ---
 
-## ✨ Credits
-
-This project is a cross-platform port and evolution of [**Clicky**](https://github.com/farzaa/clicky) by [Farza](https://x.com/farzatv). Clicky was the original macOS-only AI companion — menu bar app, cursor overlay, streaming voice, the whole package. Roki rebuilds those ideas from the ground up for **Windows and beyond**, using Tauri v2, React, and TypeScript.
-
-> All credit for the original concept and design goes to Farza. This wouldn't exist without Clicky.
-
-Original Clicky is MIT-licensed and available at [github.com/farzaa/clicky](https://github.com/farzaa/clicky).
-
----
-
-## 🏗️ Architecture
+## Architecture
 
 Roki is a **Bun monorepo** with Turbo for orchestration:
 
@@ -69,37 +71,37 @@ roki/
 
 ```
 Shortcut (Ctrl+Shift+Space) or Click Tray
-        │
-        ▼
-  ┌─────────────┐     ┌──────────────┐
-  │  Tauri IPC   │────▶│ screen       │
-  │  invoke()    │     │ capture.rs   │
-  └─────────────┘     └──────┬───────┘
-                             │ JPEG base64
-                             ▼
-  ┌─────────────┐     ┌──────────────┐
-  │  AI Provider │◀────│ RokiEngine   │
-  │  (SSE stream)│     │ (state       │
-  │              │     │  machine)    │
-  └──────┬──────┘     └──────────────┘
-         │ streamed text
-         ▼
-  ┌─────────────┐
-  │  Panel.tsx   │
-  │  (React UI)  │
-  └─────────────┘
+        |
+        v
+  +-------------+     +--------------+
+  |  Tauri IPC   |---->|  capture.rs  |
+  |  invoke()    |     |  (xcap)      |
+  +-------------+     +------+-------+
+                             | JPEG base64
+                             v
+  +-------------+     +--------------+
+  |  AI Provider |<----| RokiEngine   |
+  |  (SSE stream)|     | (state       |
+  |              |     |  machine)    |
+  +------+------+     +--------------+
+         | streamed text
+         v
+  +-------------+
+  |  Panel.tsx   |
+  |  (React UI)  |
+  +-------------+
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Windows 10/11** (macOS/Linux support planned)
-- **Bun** 1.3+ — `powershell -c "irm bun.sh/install.ps1 | iex"`
-- **Rust** toolchain — `winget install Rust.Rustup` then `rustup default stable`
-- **MSYS2** (for GNU toolchain on Windows) — `winget install MSYS2.MSYS2`
+- Windows 10/11 (macOS/Linux support planned)
+- Bun 1.3+ -- `powershell -c "irm bun.sh/install.ps1 | iex"`
+- Rust toolchain -- `winget install Rust.Rustup` then `rustup default stable`
+- MSYS2 (for GNU toolchain on Windows) -- `winget install MSYS2.MSYS2`
 
 ### 1. Clone and install
 
@@ -118,14 +120,14 @@ cargo tauri dev
 
 This compiles the Rust backend, bundles the React frontend, and launches with:
 - System tray icon (no main window)
-- Global shortcut `Ctrl+Shift+Space`
+- Global shortcut Ctrl+Shift+Space
 - Floating panel on tray click
 
-> ⚠️ On Windows with the GNU toolchain, ensure `C:\msys64\mingw64\bin` is in your `PATH` for the resource compiler.
+> On Windows with the GNU toolchain, ensure C:\msys64\mingw64\bin is in your PATH for the resource compiler.
 
 ### 3. Set up API keys
 
-Roki needs API keys for AI inference. Configure via environment variables or by passing them to the engine constructor:
+Roki needs API keys for AI inference. Pass them to the engine constructor:
 
 ```typescript
 const engine = new RokiEngine('anthropic', {
@@ -134,18 +136,18 @@ const engine = new RokiEngine('anthropic', {
 })
 ```
 
-Supported providers and their env vars:
-| Provider    | Env Variable          | Default Model           |
-|-------------|----------------------|-------------------------|
-| Anthropic   | `ANTHROPIC_API_KEY`  | `claude-sonnet-4-20250514` |
-| OpenAI      | `OPENAI_API_KEY`     | `gpt-4o`                |
-| Gemini      | `GEMINI_API_KEY`     | `gemini-2.0-flash`      |
-| OpenRouter  | `OPENROUTER_API_KEY` | `anthropic/claude-3.5-sonnet` |
-| Ollama      | _(none, local)_      | `llama3.2`              |
+Supported providers:
+| Provider    | Env Variable          | Default Model             |
+|-------------|----------------------|---------------------------|
+| Anthropic   | ANTHROPIC_API_KEY    | claude-sonnet-4-20250514  |
+| OpenAI      | OPENAI_API_KEY       | gpt-4o                    |
+| Gemini      | GEMINI_API_KEY       | gemini-2.0-flash          |
+| OpenRouter  | OPENROUTER_API_KEY   | anthropic/claude-3.5-sonnet |
+| Ollama      | (none, local)        | llama3.2                  |
 
 ---
 
-## 🧪 Development
+## Development
 
 ### TypeCheck everything
 
@@ -160,51 +162,51 @@ cd apps/desktop
 cargo check
 ```
 
-### Package overview
+### Package status
 
-| Package | Description | Status |
-|---------|-------------|--------|
-| `@roki/ai` | 5 streaming AI providers | ✅ |
-| `@roki/core` | State machine, event system, history | ✅ |
-| `@roki/capture` | Screen resize, compress, multi-display label | ✅ |
-| `@roki/prompts` | System prompts | ✅ |
-| `@roki/config` | Zod settings schemas | ✅ |
-| `@roki/shared` | Shared TypeScript types | ✅ |
-| `roki-desktop` | Tauri app (React + Rust) | ✅ |
-| Voice pipeline | Push-to-talk, transcription | 🚧 |
-| TTS | Text-to-speech playback | 🚧 |
-| Element pointing | Blue cursor overlay animation | 🚧 |
-| Settings UI | Full settings panel + persistence | 🚧 |
-
----
-
-## 🗺️ Roadmap
-
-- **Phase 1** (✅ Complete) — Core pipeline: shortcut → capture → AI → panel
-- **Phase 1b** (🚧 In progress) — Voice pipeline: push-to-talk + transcription
-- **Phase 1c** (⏳ Planned) — TTS playback + element pointing
-- **Phase 2** (⏳ Planned) — Polish: settings, onboarding, error handling
-- **Phase 3** (⏳ Planned) — Open-source release: installer, docs, CI
+| Package       | Description                      | Status |
+|---------------|----------------------------------|--------|
+| @roki/ai      | 5 streaming AI providers         | Done   |
+| @roki/core    | State machine, events, history   | Done   |
+| @roki/capture | Screen resize, compress, label   | Done   |
+| @roki/prompts | System prompts                   | Done   |
+| @roki/config  | Zod settings schemas             | Done   |
+| @roki/shared  | Shared TypeScript types          | Done   |
+| roki-desktop  | Tauri app (React + Rust)         | Done   |
+| Voice pipeline | Push-to-talk, transcription     | WIP    |
+| TTS           | Text-to-speech playback          | WIP    |
+| Pointing      | Blue cursor overlay animation    | WIP    |
+| Settings UI   | Full settings + persistence      | WIP    |
 
 ---
 
-## 🤝 Contributing
+## Roadmap
 
-PRs welcome! The codebase is designed to be approachable:
+- Phase 1 (Done) -- Core pipeline: shortcut to capture to AI to panel
+- Phase 1b (WIP) -- Voice pipeline: push-to-talk + transcription
+- Phase 1c (Planned) -- TTS playback + element pointing
+- Phase 2 (Planned) -- Polish: settings, onboarding, error handling
+- Phase 3 (Planned) -- Release: installer, docs, CI
 
-- **Rust backend** in `apps/desktop/src-tauri/src/` — Tauri commands, global shortcuts, screen capture
-- **React frontend** in `apps/desktop/src/` — Panel UI, IPC bridge
-- **TypeScript packages** in `packages/` — AI providers, state machine, config, types
+---
+
+## Contributing
+
+PRs welcome. The codebase is designed to be approachable:
+
+- **Rust backend** in `apps/desktop/src-tauri/src/` -- Tauri commands, global shortcuts, screen capture
+- **React frontend** in `apps/desktop/src/` -- Panel UI, IPC bridge
+- **TypeScript packages** in `packages/` -- AI providers, state machine, config, types
 
 Before opening a PR:
-1. Run `bun run typecheck` — all 10 packages must pass
-2. Run `cargo check` in `apps/desktop` — Rust must compile cleanly
+1. Run `bun run typecheck` -- all 10 packages must pass
+2. Run `cargo check` in `apps/desktop` -- Rust must compile cleanly
 3. Keep commits granular (one logical change per commit)
 4. Update `AGENTS.md` if you add new files or change the architecture
 
 ---
 
-## 📄 License
+## License
 
 MIT. Originally inspired by [Clicky](https://github.com/farzaa/clicky) by Farza (also MIT).
 
