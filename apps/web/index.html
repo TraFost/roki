@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roki — AI Desktop Companion</title>
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🪨</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --space: #0f1722;
+      --space-light: #1a2a3a;
+      --gold: #e88d2a;
+      --gold-light: #f0a84a;
+      --teal: #2a6a7a;
+      --warm-white: #f8f6f2;
+      --white: #ffffff;
+      --slate: #4a5568;
+      --slate-light: #a0aec0;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--white);
+      color: var(--space);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--space);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--slate);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--space); }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--space);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--space-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--space);
+      border: 1.5px solid var(--space);
+    }
+
+    .btn-outline:hover {
+      background: var(--space);
+      color: var(--white);
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 100px 40px 80px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: var(--warm-white);
+      border-radius: 50px;
+      font-size: 13px;
+      color: var(--slate);
+      margin-bottom: 32px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .hero h1 {
+      font-size: 60px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      color: var(--space);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--slate);
+      max-width: 600px;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 60px;
+    }
+
+    .hero-media {
+      width: 100%;
+      max-width: 640px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(15, 23, 34, 0.08);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-media img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .section {
+      padding: 100px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: var(--space);
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--slate);
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .feature-card {
+      padding: 32px;
+      background: var(--warm-white);
+      border-radius: var(--radius);
+      transition: all 0.25s;
+    }
+
+    .feature-card:hover {
+      background: var(--white);
+      box-shadow: 0 4px 24px rgba(15, 23, 34, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--space);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--space);
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--slate);
+      line-height: 1.6;
+    }
+
+    .providers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .provider-chip {
+      padding: 8px 20px;
+      background: var(--warm-white);
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--slate);
+    }
+
+    .provider-chip.gold {
+      background: rgba(232, 141, 42, 0.1);
+      color: var(--gold);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-top: 60px;
+      padding-top: 60px;
+      border-top: 1px solid rgba(15, 23, 34, 0.06);
+    }
+
+    .stat h4 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--space);
+      letter-spacing: -1px;
+    }
+
+    .stat p {
+      font-size: 14px;
+      color: var(--slate-light);
+      margin-top: 4px;
+    }
+
+    .cta-section {
+      background: var(--space);
+      border-radius: var(--radius);
+      padding: 80px;
+      text-align: center;
+    }
+
+    .cta-section .section-title { color: var(--white); }
+    .cta-section .section-subtitle { color: rgba(255,255,255,0.6); margin: 0 auto; }
+
+    .btn-cta {
+      background: var(--gold);
+      color: var(--white);
+      padding: 16px 40px;
+      font-size: 16px;
+      margin-top: 36px;
+      display: inline-block;
+    }
+
+    .btn-cta:hover {
+      background: var(--gold-light);
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: var(--slate-light);
+      font-size: 13px;
+    }
+
+    footer a {
+      color: var(--slate);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: var(--space); }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 60px 20px 40px; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .hero p { font-size: 17px; }
+      .section { padding: 60px 20px; }
+      .section-title { font-size: 28px; }
+      .features { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .cta-section { padding: 40px 24px; border-radius: 12px; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">rok<span>i</span></div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#providers">Providers</a></li>
+    <li><a href="#cta">Get Started</a></li>
+    <li><a href="https://github.com/your-org/roki" target="_blank">GitHub</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Now available for Windows
+  </div>
+  <h1>An AI companion that <em>sees</em> your screen</h1>
+  <p>Press a shortcut, ask a question. Roki captures your screen, sends it to an AI model, and streams the answer back. Like having a copilot that actually knows what you're looking at.</p>
+  <div class="hero-actions">
+    <a href="#cta" class="btn btn-primary">Get Started</a>
+    <a href="https://github.com/your-org/roki" target="_blank" class="btn btn-outline">View on GitHub</a>
+  </div>
+  <div class="hero-media">
+    <img src="../../media/rocky.gif" alt="Roki demo">
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Screen-aware AI, right in your tray</h2>
+  <p class="section-subtitle">Works with any model you want. Claude, GPT-4o, Gemini, or run it locally with Ollama.</p>
+
+  <div class="features">
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">*</div>
+      <h3>Global shortcut</h3>
+      <p>Hit Ctrl+Shift+Space from anywhere. Roki captures all your monitors in one shot.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">~</div>
+      <h3>Streaming responses</h3>
+      <p>See the AI response appear in real-time as it streams. No waiting for the whole thing to finish.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">#</div>
+      <h3>Multi-display aware</h3>
+      <p>Got two monitors? Roki captures both, labels them, and tells the AI which one has your cursor.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">+</div>
+      <h3>Pick your model</h3>
+      <p>Claude, GPT-4o, Gemini, OpenRouter, or local Ollama. Swap with a single line of code.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">@</div>
+      <h3>Light and fast</h3>
+      <p>Tauri v2 under the hood. No Electron bloat. Tiny footprint, native performance.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon" style="color: var(--gold);">^</div>
+      <h3>Open source</h3>
+      <p>MIT licensed. Fork it, modify it, build a startup on it. I don't mind.</p>
+    </div>
+  </div>
+
+  <div class="providers" id="providers">
+    <span class="provider-chip gold">Anthropic Claude</span>
+    <span class="provider-chip gold">OpenAI GPT-4o</span>
+    <span class="provider-chip gold">Google Gemini</span>
+    <span class="provider-chip">OpenRouter</span>
+    <span class="provider-chip">Ollama</span>
+  </div>
+</section>
+
+<section class="section" id="cta">
+  <div class="cta-section">
+    <div class="section-label" style="color: var(--gold);">Get Started</div>
+    <h2 class="section-title">Ready to meet Roki?</h2>
+    <p class="section-subtitle">Clone the repo, drop in your API key, and you're off. Takes about 2 minutes.</p>
+    <a href="https://github.com/your-org/roki" target="_blank" class="btn btn-cta">Clone on GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <p>MIT licensed. Originally inspired by <a href="https://github.com/farzaa/clicky">Clicky</a> by <a href="https://x.com/farzatv">Farza</a>.</p>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
