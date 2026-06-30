@@ -19,6 +19,7 @@ impl TtsProcess {
 
         let server_path = std::env::current_dir()
             .map_err(|e| e.to_string())?
+            .join("apps")
             .join("tts-server")
             .join("server.py");
 
