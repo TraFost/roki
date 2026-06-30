@@ -1,162 +1,211 @@
-Update: April 27, 2026.
+# Roki
 
-Hi there! I'm Farza, the guy that made Clicky.
+> **Cross-platform AI desktop assistant.** Windows-first, built with Tauri v2 + React + Bun.
 
-The existing codebase remains open source. Tinker with it, make it yours, start a company out of it, do whatever you want I don't mind. But, for all the new stuff I'm hacking on, gonna keep it private. To get the latest Clicky, you can go [here](https://www.heyclicky.com/).
+Roki lives in your system tray. Hit a global shortcut, it captures your screen, sends it to an AI model alongside your voice or text query, and streams the response back — right next to your cursor. Think of it as having a copilot that can *see* what you're doing.
 
-I also tweeted about this [here](https://x.com/FarzaTV/status/2043402737828962489).
+![Roki demo](https://github.com/user-attachments/assets/placeholder-demo.gif)
 
-Go crazy with this repo!! It's an MIT license.
+---
 
-# Hi, this is Clicky.
-It's an AI teacher that lives as a buddy next to your cursor. It can see your screen, talk to you, and even point at stuff. Kinda like having a real teacher next to you.
+## 🧠 What it does
 
-Download it [here](https://www.clicky.so/) for free.
+1. **Press a shortcut** (`Ctrl+Shift+Space`) or click the tray icon
+2. **Roki captures** your screen (all monitors, JPEG-compressed, multi-display aware)
+3. **AI processes** the screenshot + your query via your choice of provider
+4. **Response streams** back in a floating dark-theme panel
 
-Here's the [original tweet](https://x.com/FarzaTV/status/2041314633978659092) that kinda blew up for a demo for more context.
+Optional (coming soon):
+- **Voice input** — push-to-talk, real-time transcription
+- **Element pointing** — the AI can direct a blue cursor overlay to UI elements
+- **Text-to-speech** — responses spoken aloud
 
-![Clicky — an ai buddy that lives on your mac](clicky-demo.gif)
+---
 
-This is the open-source version of Clicky for those that want to hack on it, build their own features, or just see how it works under the hood.
+## ✨ Credits
 
-## Get started with Claude Code
+This project is a cross-platform port and evolution of [**Clicky**](https://github.com/farzaa/clicky) by [Farza](https://x.com/farzatv). Clicky was the original macOS-only AI companion — menu bar app, cursor overlay, streaming voice, the whole package. Roki rebuilds those ideas from the ground up for **Windows and beyond**, using Tauri v2, React, and TypeScript.
 
-The fastest way to get this running is with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+> All credit for the original concept and design goes to Farza. This wouldn't exist without Clicky.
 
-Once you get Claude running, paste this:
+Original Clicky is MIT-licensed and available at [github.com/farzaa/clicky](https://github.com/farzaa/clicky).
+
+---
+
+## 🏗️ Architecture
+
+Roki is a **Bun monorepo** with Turbo for orchestration:
 
 ```
-Hi Claude.
-
-Clone https://github.com/farzaa/clicky.git into my current directory.
-
-Then read the CLAUDE.md. I want to get Clicky running locally on my Mac.
-
-Help me set up everything — the Cloudflare Worker with my own API keys, the proxy URLs, and getting it building in Xcode. Walk me through it.
+roki/
+├── apps/
+│   └── desktop/              # Tauri v2 desktop app (Windows)
+│       ├── src/               # React frontend (Vite + Tailwind v4)
+│       │   ├── App.tsx         # Entry point, engine wiring
+│       │   ├── Panel.tsx       # Dark-themed floating companion panel
+│       │   └── TauriBridge.ts  # Tauri IPC helpers
+│       └── src-tauri/          # Rust backend
+│           ├── capture.rs      # Multi-monitor screenshot (xcap)
+│           ├── shortcut.rs     # Global keyboard shortcut
+│           ├── overlay.rs      # Transparent overlay windows
+│           └── main.rs         # Tray icon, commands, setup
+├── packages/
+│   ├── ai/                    # AI provider layer
+│   │   ├── anthropic.ts       #   Claude (streaming SSE)
+│   │   ├── openai.ts          #   GPT-4o
+│   │   ├── gemini.ts          #   Gemini 2.0 Flash
+│   │   ├── openrouter.ts      #   OpenRouter (any model)
+│   │   └── ollama.ts          #   Ollama (local LLMs)
+│   ├── core/                  # RokiEngine state machine
+│   ├── capture/               # Screen processing (resize, compress, label)
+│   ├── prompts/               # System prompts for AI
+│   ├── config/                # Zod settings schemas
+│   ├── shared/                # Shared TypeScript types
+│   └── sdk/                   # Public API re-exports
+└── worker/                    # Cloudflare Worker proxy (ported from Clicky)
 ```
 
-That's it. It'll clone the repo, read the docs, and walk you through the whole setup. Once you're running you can just keep talking to it — build features, fix bugs, whatever. Go crazy.
+### Data flow
 
-## Manual setup
+```
+Shortcut (Ctrl+Shift+Space) or Click Tray
+        │
+        ▼
+  ┌─────────────┐     ┌──────────────┐
+  │  Tauri IPC   │────▶│ screen       │
+  │  invoke()    │     │ capture.rs   │
+  └─────────────┘     └──────┬───────┘
+                             │ JPEG base64
+                             ▼
+  ┌─────────────┐     ┌──────────────┐
+  │  AI Provider │◀────│ RokiEngine   │
+  │  (SSE stream)│     │ (state       │
+  │              │     │  machine)    │
+  └──────┬──────┘     └──────────────┘
+         │ streamed text
+         ▼
+  ┌─────────────┐
+  │  Panel.tsx   │
+  │  (React UI)  │
+  └─────────────┘
+```
 
-If you want to do it yourself, here's the deal.
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- macOS 14.2+ (for ScreenCaptureKit)
-- Xcode 15+
-- Node.js 18+ (for the Cloudflare Worker)
-- A [Cloudflare](https://cloudflare.com) account (free tier works)
-- API keys for: [Anthropic](https://console.anthropic.com), [AssemblyAI](https://www.assemblyai.com), [ElevenLabs](https://elevenlabs.io)
+- **Windows 10/11** (macOS/Linux support planned)
+- **Bun** 1.3+ — `powershell -c "irm bun.sh/install.ps1 | iex"`
+- **Rust** toolchain — `winget install Rust.Rustup` then `rustup default stable`
+- **MSYS2** (for GNU toolchain on Windows) — `winget install MSYS2.MSYS2`
 
-### 1. Set up the Cloudflare Worker
-
-The Worker is a tiny proxy that holds your API keys. The app talks to the Worker, the Worker talks to the APIs. This way your keys never ship in the app binary.
+### 1. Clone and install
 
 ```bash
-cd worker
-npm install
+git clone https://github.com/your-org/roki.git
+cd roki
+bun install
 ```
 
-Now add your secrets. Wrangler will prompt you to paste each one:
+### 2. Build the Tauri app
 
 ```bash
-npx wrangler secret put ANTHROPIC_API_KEY
-npx wrangler secret put ASSEMBLYAI_API_KEY
-npx wrangler secret put ELEVENLABS_API_KEY
+cd apps/desktop
+cargo tauri dev
 ```
 
-For the ElevenLabs voice ID, open `wrangler.toml` and set it there (it's not sensitive):
+This compiles the Rust backend, bundles the React frontend, and launches with:
+- System tray icon (no main window)
+- Global shortcut `Ctrl+Shift+Space`
+- Floating panel on tray click
 
-```toml
-[vars]
-ELEVENLABS_VOICE_ID = "your-voice-id-here"
+> ⚠️ On Windows with the GNU toolchain, ensure `C:\msys64\mingw64\bin` is in your `PATH` for the resource compiler.
+
+### 3. Set up API keys
+
+Roki needs API keys for AI inference. Configure via environment variables or by passing them to the engine constructor:
+
+```typescript
+const engine = new RokiEngine('anthropic', {
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-sonnet-4-20250514',
+})
 ```
 
-Deploy it:
+Supported providers and their env vars:
+| Provider    | Env Variable          | Default Model           |
+|-------------|----------------------|-------------------------|
+| Anthropic   | `ANTHROPIC_API_KEY`  | `claude-sonnet-4-20250514` |
+| OpenAI      | `OPENAI_API_KEY`     | `gpt-4o`                |
+| Gemini      | `GEMINI_API_KEY`     | `gemini-2.0-flash`      |
+| OpenRouter  | `OPENROUTER_API_KEY` | `anthropic/claude-3.5-sonnet` |
+| Ollama      | _(none, local)_      | `llama3.2`              |
+
+---
+
+## 🧪 Development
+
+### TypeCheck everything
 
 ```bash
-npx wrangler deploy
+bun run typecheck
 ```
 
-It'll give you a URL like `https://your-worker-name.your-subdomain.workers.dev`. Copy that.
-
-### 2. Run the Worker locally (for development)
-
-If you want to test changes to the Worker without deploying:
+Verifies all 10 packages in parallel (Turbo). Cargo-check the Rust side:
 
 ```bash
-cd worker
-npx wrangler dev
+cd apps/desktop
+cargo check
 ```
 
-This starts a local server (usually `http://localhost:8787`) that behaves exactly like the deployed Worker. You'll need to create a `.dev.vars` file in the `worker/` directory with your keys:
+### Package overview
 
-```
-ANTHROPIC_API_KEY=sk-ant-...
-ASSEMBLYAI_API_KEY=...
-ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=...
-```
+| Package | Description | Status |
+|---------|-------------|--------|
+| `@roki/ai` | 5 streaming AI providers | ✅ |
+| `@roki/core` | State machine, event system, history | ✅ |
+| `@roki/capture` | Screen resize, compress, multi-display label | ✅ |
+| `@roki/prompts` | System prompts | ✅ |
+| `@roki/config` | Zod settings schemas | ✅ |
+| `@roki/shared` | Shared TypeScript types | ✅ |
+| `roki-desktop` | Tauri app (React + Rust) | ✅ |
+| Voice pipeline | Push-to-talk, transcription | 🚧 |
+| TTS | Text-to-speech playback | 🚧 |
+| Element pointing | Blue cursor overlay animation | 🚧 |
+| Settings UI | Full settings panel + persistence | 🚧 |
 
-Then update the proxy URLs in the Swift code to point to `http://localhost:8787` instead of the deployed Worker URL while developing. Grep for `clicky-proxy` to find them all.
+---
 
-### 3. Update the proxy URLs in the app
+## 🗺️ Roadmap
 
-The app has the Worker URL hardcoded in a few places. Search for `your-worker-name.your-subdomain.workers.dev` and replace it with your Worker URL:
+- **Phase 1** (✅ Complete) — Core pipeline: shortcut → capture → AI → panel
+- **Phase 1b** (🚧 In progress) — Voice pipeline: push-to-talk + transcription
+- **Phase 1c** (⏳ Planned) — TTS playback + element pointing
+- **Phase 2** (⏳ Planned) — Polish: settings, onboarding, error handling
+- **Phase 3** (⏳ Planned) — Open-source release: installer, docs, CI
 
-```bash
-grep -r "clicky-proxy" leanring-buddy/
-```
+---
 
-You'll find it in:
-- `CompanionManager.swift` — Claude chat + ElevenLabs TTS
-- `AssemblyAIStreamingTranscriptionProvider.swift` — AssemblyAI token endpoint
+## 🤝 Contributing
 
-### 4. Open in Xcode and run
+PRs welcome! The codebase is designed to be approachable:
 
-```bash
-open leanring-buddy.xcodeproj
-```
+- **Rust backend** in `apps/desktop/src-tauri/src/` — Tauri commands, global shortcuts, screen capture
+- **React frontend** in `apps/desktop/src/` — Panel UI, IPC bridge
+- **TypeScript packages** in `packages/` — AI providers, state machine, config, types
 
-In Xcode:
-1. Select the `leanring-buddy` scheme (yes, the typo is intentional, long story)
-2. Set your signing team under Signing & Capabilities
-3. Hit **Cmd + R** to build and run
+Before opening a PR:
+1. Run `bun run typecheck` — all 10 packages must pass
+2. Run `cargo check` in `apps/desktop` — Rust must compile cleanly
+3. Keep commits granular (one logical change per commit)
+4. Update `AGENTS.md` if you add new files or change the architecture
 
-The app will appear in your menu bar (not the dock). Click the icon to open the panel, grant the permissions it asks for, and you're good.
+---
 
-### Permissions the app needs
+## 📄 License
 
-- **Microphone** — for push-to-talk voice capture
-- **Accessibility** — for the global keyboard shortcut (Control + Option)
-- **Screen Recording** — for taking screenshots when you use the hotkey
-- **Screen Content** — for ScreenCaptureKit access
+MIT. Originally inspired by [Clicky](https://github.com/farzaa/clicky) by Farza (also MIT).
 
-## Architecture
-
-If you want the full technical breakdown, read `CLAUDE.md`. But here's the short version:
-
-**Menu bar app** (no dock icon) with two `NSPanel` windows — one for the control panel dropdown, one for the full-screen transparent cursor overlay. Push-to-talk streams audio over a websocket to AssemblyAI, sends the transcript + screenshot to Claude via streaming SSE, and plays the response through ElevenLabs TTS. Claude can embed `[POINT:x,y:label:screenN]` tags in its responses to make the cursor fly to specific UI elements across multiple monitors. All three APIs are proxied through a Cloudflare Worker.
-
-## Project structure
-
-```
-leanring-buddy/          # Swift source (yes, the typo stays)
-  CompanionManager.swift    # Central state machine
-  CompanionPanelView.swift  # Menu bar panel UI
-  ClaudeAPI.swift           # Claude streaming client
-  ElevenLabsTTSClient.swift # Text-to-speech playback
-  OverlayWindow.swift       # Blue cursor overlay
-  AssemblyAI*.swift         # Real-time transcription
-  BuddyDictation*.swift     # Push-to-talk pipeline
-worker/                  # Cloudflare Worker proxy
-  src/index.ts              # Three routes: /chat, /tts, /transcribe-token
-CLAUDE.md                # Full architecture doc (agents read this)
-```
-
-## Contributing
-
-PRs welcome. If you're using Claude Code, it already knows the codebase — just tell it what you want to build and point it at `CLAUDE.md`.
-
-Got feedback? DM me on X [@farzatv](https://x.com/farzatv).
+Go build something cool.
