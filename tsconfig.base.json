@@ -23,7 +23,8 @@
       "@shared/*": ["packages/shared/src/*"],
       "@ui/*": ["packages/ui/src/*"],
       "@automation/*": ["packages/automation/src/*"],
-      "@config/*": ["packages/config/src/*"]
+      "@config/*": ["packages/config/src/*"],
+      "@tts/*": ["packages/tts/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "target"]

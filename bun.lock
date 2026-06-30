@@ -19,6 +19,7 @@
         "@roki/core": "workspace:*",
         "@roki/prompts": "workspace:*",
         "@roki/shared": "workspace:*",
+        "@roki/tts": "workspace:*",
         "@tauri-apps/api": "^2.0.0",
         "@tauri-apps/plugin-fs": "^2.0.0",
         "@tauri-apps/plugin-global-shortcut": "^2.0.0",
@@ -120,6 +121,13 @@
     "packages/shared": {
       "name": "@roki/shared",
       "version": "0.0.1",
+    },
+    "packages/tts": {
+      "name": "@roki/tts",
+      "version": "0.0.1",
+      "dependencies": {
+        "@roki/shared": "workspace:*",
+      },
     },
     "packages/ui": {
       "name": "@roki/ui",
@@ -281,6 +289,8 @@
     "@roki/sdk": ["@roki/sdk@workspace:packages/sdk"],
 
     "@roki/shared": ["@roki/shared@workspace:packages/shared"],
+
+    "@roki/tts": ["@roki/tts@workspace:packages/tts"],
 
     "@roki/ui": ["@roki/ui@workspace:packages/ui"],
 

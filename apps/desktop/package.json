@@ -16,6 +16,7 @@
     "@roki/capture": "workspace:*",
     "@roki/config": "workspace:*",
     "@roki/prompts": "workspace:*",
+    "@roki/tts": "workspace:*",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-global-shortcut": "^2.0.0",
     "@tauri-apps/plugin-store": "^2.0.0",

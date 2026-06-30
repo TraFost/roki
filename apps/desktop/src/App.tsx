@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { RokiEngine } from '@roki/core'
 import type { StreamChunk, EngineState, RokiError } from '@roki/shared'
+import { TTSClient } from '@roki/tts'
 import { Panel } from './components/Panel'
 import { captureScreens, getShortcutLabel, onMenuCapture, quitApp } from './components/TauriBridge'
 
@@ -11,12 +12,24 @@ function App() {
   const [shortcutLabel, setShortcutLabel] = useState('Ctrl+Shift+Space')
   const [loading, setLoading] = useState(false)
   const engineRef = useRef<RokiEngine | null>(null)
+  const ttsRef = useRef<TTSClient | null>(null)
+  const responseTextRef = useRef('')
   const hasResponse = responseText.length > 0
+
+  useEffect(() => {
+    responseTextRef.current = responseText
+  }, [responseText])
+
+  const handleTtsFinished = useCallback(() => {
+    setEngineState('idle')
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
     const engine = new RokiEngine('anthropic', {
       model: 'claude-sonnet-4-6',
     })
+    const tts = new TTSClient()
 
     engine.on('stateChange', (state: EngineState) => {
       setEngineState(state)
@@ -41,11 +54,23 @@ function App() {
       setLoading(false)
     })
 
-    engine.on('done', () => {
+    engine.on('done', async () => {
       setLoading(false)
+
+      const text = responseTextRef.current
+      if (text && await tts.isAvailable()) {
+        setEngineState('responding')
+        setLoading(true)
+        try {
+          await tts.speak(text)
+        } catch {
+        }
+        handleTtsFinished()
+      }
     })
 
     engineRef.current = engine
+    ttsRef.current = tts
 
     void getShortcutLabel().then(setShortcutLabel)
 
@@ -55,9 +80,10 @@ function App() {
 
     return () => {
       engine.cancel()
+      tts.stop()
       void unlistenPromise.then((unlisten) => unlisten())
     }
-  }, [])
+  }, [handleTtsFinished])
 
   const handleCapture = useCallback(async () => {
     const engine = engineRef.current
@@ -84,6 +110,7 @@ function App() {
   }, [])
 
   const handleClear = useCallback(() => {
+    ttsRef.current?.stop()
     setResponseText('')
     setError(null)
     engineRef.current?.clearHistory()

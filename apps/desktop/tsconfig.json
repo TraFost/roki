@@ -11,7 +11,8 @@
       "@roki/ai": ["../../packages/ai/src"],
       "@roki/capture": ["../../packages/capture/src"],
       "@roki/config": ["../../packages/config/src"],
-      "@roki/prompts": ["../../packages/prompts/src"]
+      "@roki/prompts": ["../../packages/prompts/src"],
+      "@roki/tts": ["../../packages/tts/src"]
     }
   },
   "include": ["src"]
