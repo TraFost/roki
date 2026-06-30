@@ -99,7 +99,7 @@ export default function App() {
           </a>
         </div>
         <div className="w-full max-w-[640px] rounded-[16px] overflow-hidden shadow-[0_8px_40px_rgba(15,23,34,0.08)] animate-float">
-          <img src="../../media/rocky.gif" alt="Roki demo" className="w-full block" />
+          <img src="../../../media/rocky.gif" alt="Roki demo" className="w-full block" />
         </div>
       </section>
 
