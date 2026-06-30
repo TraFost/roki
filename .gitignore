@@ -10,3 +10,5 @@ releases/
 coding-plans/
 worker/node_modules/
 worker/.dev.vars
+apps/desktop/src-tauri/gen/
+reference/
